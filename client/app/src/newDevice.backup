@@ -1,0 +1,43 @@
+import React from 'react'
+import { useEffect, useState } from 'react'
+import axios from 'axios'
+
+const NewDevice = () => {
+     const [password, setPassword] = useState("");
+     const [status, setStatus] = useState("Please authenticate in server console");
+     const data = {};
+     data["password"] = password
+
+     useEffect(() => {
+         getHosts();
+     }, []);
+
+    const getHosts = async () => {
+        try{
+            const response = await fetch("http://127.0.0.1:8000/api/addDevice/");
+            const data = await response.json();
+            var parsedData = JSON.parse(data)
+            console.log(parsedData);
+            setStatus(parsedData);
+        } catch(err){
+            console.log(err)
+        }
+    };
+
+    return(
+        <>
+        <h1> Add new device </h1>
+        <form>
+            <input type="password" placeholder="root password" onChange={(e) => setPassword(e.target.value)}/>
+        </form>
+        <button className="addButton">Add Device</button>
+        <div>
+            {status.map((host) => (
+                <div> {host.ip} : {host.vendor} </div>
+            ))}
+        </div>
+        </>
+    );
+}
+
+export default NewDevice

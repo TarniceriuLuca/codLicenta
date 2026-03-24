@@ -1,0 +1,161 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+
+.mainCanvas{
+    display: flex;
+    flex-direction: row;
+}
+
+.monitorCard{
+        margin: 1.5vw;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        padding: 2vw;
+        border: solid white 2px;
+        border-radius: 10px
+}
+
+.progressBarExt{
+    height: 20px;
+    width: 200px;
+    background-color: #00000000;
+    border: solid 2px;
+    margin: 2px;
+    display: flex;
+}
+
+.progressBarInt{
+    height: 20px;
+    transition: width 0.5s;
+}
+
+.addButton{
+    padding: 0.3vw;
+    font-size: 0.85rem;
+    background-color: white;
+    border: solid white 1px;
+    border-radius: 10px;
+    color: black;
+}
+
+.navbar{
+    display: block;
+    position: fixed;
+    left: 2vw;
+    top: 0.5vw;
+    padding: 1vw;
+    background-color: #00000000;
+    border-radius: 10px;
+}
+
+.navbar button{
+    padding: 1vw;
+    margin: 0.5vw;
+    background-color: white;
+    border: solid white 1px;
+    border-radius: 10px;
+    color: black;
+}
+
+.parentContainer{
+    display: flex;
+
+}
+
+.childIP{
+    text-align: left;
+}
+
+.childVendor{
+    padding-left: 2vw;
+    text-align: left;
+}
+
+.reconnectBtn{
+    padding: 0.4vw;
+    margin: 0.5vw;
+    background-color: white;
+    border: solid white 1px;
+    border-radius: 10px;
+    color: black;
+    cursor:pointer;
+}
+.clientName{
+    font-size: 1.5rem;
+    color: white;
+    text-decoration: underline;
+    cursor:pointer;
+}
+
+.details{
+    display: flex;
+    flex-direction: row;
+}
+
+.divider{
+    width: 0.2vw;
+    background-color: white;
+    margin: 0 2vw;
+}
+
+.rightContainer{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.commandOutput{
+    border: solid 0.2vw white;
+}
+
+.deleteBtn{
+    padding: 0.4vw;
+    margin: 0.5vw;
+    //background-color: white;
+    //border: solid white 1px;
+    border-radius: 10px;
+    color: white;
+    cursor:pointer;
+}

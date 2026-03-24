@@ -1,0 +1,7 @@
+#!/bin/bash
+
+mkdir ~/RemoteMonitor
+curl --output ~/RemoteMonitor/TCP_receive.py "https://github.com/TarniceriuLuca/proiectLicenta/blob/main/TCP_receive.py"
+curl --output ~/RemoteMonitor/getInfo.py "https://github.com/TarniceriuLuca/proiectLicenta/blob/main/getInfo.py"
+rm -- "$0"
+
