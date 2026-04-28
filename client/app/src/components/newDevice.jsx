@@ -33,7 +33,7 @@ const NewDevice = () => {
     }
 
     const addDevice = async(ip, name, user) => {
-        setLoading("Please authenticate in server console")
+        setLoading("Loading...")
         const newData = await postData(ip, name, user)
 
     }
@@ -53,7 +53,7 @@ const NewDevice = () => {
         }
     };
 
-    if(status == "Please authenticate in server console"){
+    if(status == "Loading..."){
         return(
         <>
         <h1> Add new device </h1>

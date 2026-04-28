@@ -23,16 +23,16 @@ def get_status(request):
     for client in client:
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 sock.connect((client.ip, port))
                 sock.sendall(bytes(data, "utf-8"))
-                sock.sendall(b"\n")
 
                 received = str(sock.recv(1024), "utf-8")
-                time.sleep(0.3)
         except:
             received = '["not available", "not available"]'
         # print("Received:", json.loads(received))
         responseData.append({"name" : client.name, "ip": client.ip, "user": client.user, "status" : json.loads(received)})
+
     return Response(json.dumps(responseData))
 
 @api_view(['GET'])
@@ -61,7 +61,6 @@ def add_device(request):
     name = request.POST['name']
     user = request.POST['user']
     print(ip, name)
-    print(subprocess.run("pwd", capture_output=True, text=True).stdout)
 
 
     newDevice = Client.objects.update_or_create(
@@ -70,8 +69,8 @@ def add_device(request):
         name=name
     )
     command1 = "ssh " + user + "@" + ip + " bash < ./backendLicenta/initialize.sh"
+
     os.system(command1)
-    # install TCP_receive.py on targeted host
     return Response("OK")
 
 @api_view(['POST'])
@@ -94,9 +93,9 @@ def get_status_by_ip(request):
 
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.connect((client.ip, port))
             sock.sendall(bytes(data, "utf-8"))
-            sock.sendall(b"\n")
 
             received = str(sock.recv(1024), "utf-8")
             time.sleep(0.3)
@@ -127,7 +126,7 @@ def run_command(request):
 def delete_client(request):
     clientIP = request.POST['ip']
     client = Client.objects.get(pk=clientIP)
-
+    shutdown_client(request)
     command = "ssh " + client.user + "@" + client.ip + " 'rm -r ~/RemoteMonitor'"
     subprocess.check_output(command, shell=True)
     responseData = []
@@ -140,22 +139,80 @@ def delete_client(request):
     return Response(json.dumps(responseData))
 
 @api_view(['POST'])
-def shutdown_server(request):
+def shutdown_client(request):
     clientIP = request.POST['ip']
     client = Client.objects.get(pk=clientIP)
     port = 65432
     data = "shutdown"
+    responseData = []
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.connect((client.ip, port))
             sock.sendall(bytes(data, "utf-8"))
-            sock.sendall(b"\n")
 
             received = str(sock.recv(1024), "utf-8")
             print(received)
-            time.sleep(0.3)
     except:
         pass
+    responseData.append({"result": received})
+    return Response(json.dumps(responseData))
 
 
 
+@api_view(['POST'])
+def upload_file(request):
+    responseData = []
+    print("called file upload")
+    if request.method == "POST":
+        script = request.FILES.get('script')
+        clientIP = request.POST['ip']
+        fileName = request.POST['fileName']
+        time = request.POST['time']
+        client = Client.objects.get(pk=clientIP)
+        print(clientIP)
+        responseData.append({"result": "received"})
+
+        file_content = script.read().decode("utf_8")
+        with open("/tmp/remoteScript", 'w') as tmp:
+            tmp.write(file_content)
+        print(file_content, time)
+
+        if time != "run":
+            command = "scp /tmp/remoteScript " + client.user + "@" + client.ip + ":~/RemoteMonitor/" + fileName
+            subprocess.check_output(command, shell=True)
+            command = "ssh " + client.user + "@" + client.ip + " \"chmod +x ~/RemoteMonitor/\"" + fileName
+            subprocess.check_output(command, shell=True)
+
+        if time == "transfer":
+            command = "null"
+            cronString = "null"
+        elif time == "run":
+            command = "ssh " + client.user + "@" + client.ip + " bash < ~/RemoteMonitor/" + fileName
+            cronString = "null"
+        elif time == "day":
+            command = "null"
+            cronString = "@daily ~/RemoteMonitor/" + fileName
+        elif time == "hour":
+            command = "null"
+            cronString = "@hourly ~/RemoteMonitor/" + fileName
+        elif time == "startup":
+            command = "null"
+            cronString = "@reboot ~/RemoteMonitor/" + fileName
+        else:
+            command = "null"
+            cronString = "null"
+
+        if cronString != "null":
+            print(cronString)
+            copy_current_crontab = "ssh " + client.user + "@" + client.ip + " \"crontab -l > /tmp/cronjob\""
+            subprocess.check_output(copy_current_crontab, shell=True)
+            edit_tmp_file = "ssh " + client.user + "@" + client.ip + " \"echo \'" + cronString + "\' >> /tmp/cronjob\""
+            subprocess.check_output(edit_tmp_file, shell=True)
+            apply_new_crontab = "ssh " + client.user + "@" + client.ip + " crontab /tmp/cronjob"
+            subprocess.check_output(apply_new_crontab, shell=True)
+            remove_temp_file = "ssh " + client.user + "@" + client.ip + " rm -rf /tmp/cronjob"
+            subprocess.check_output(remove_temp_file, shell=True)
+        if command != "null":
+            subprocess.check_output(command, shell=True)
+    return Response(json.dumps(responseData))

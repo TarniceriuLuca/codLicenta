@@ -9,6 +9,10 @@ const DeviceDetails = () => {
     const [loading, setLoading] = useState("Loading...");
     const [command, setCommand] = useState();
     const [output, setOutput] = useState();
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [runButtonText, setRunButtonText] = useState("run!");
+    const [uploadButtonText, setUploadButtonText] = useState("upload")
+    const [selectedTime, setSelectedTime] = useState("transfer");
 
      useEffect(() => {
         updateStatus(localStorage.getItem('currentIP'));
@@ -41,14 +45,47 @@ const DeviceDetails = () => {
         setLoading("")
     }
 
-const sendCommand = async() => {
+    const sendCommand = async() => {
+        setRunButtonText("running...");
         const body = {"ip":localStorage.getItem('currentIP'), "command": command};
         const response = await axios.post("http://127.0.0.1:8000/api/runCommand/", body,
             {headers:{'Content-Type':'multipart/form-data',}})
 
+
+
         var parsedData = JSON.parse(response.data)
         console.log(parsedData[0]);
         setOutput(parsedData[0].result)
+        setRunButtonText("run!");
+    }
+
+
+    const uploadFile = async() => {
+        setUploadButtonText("uploading...");
+        const formData = new FormData();
+        formData.append("script", selectedFile);
+        formData.append("ip", localStorage.getItem('currentIP'));
+        formData.append("fileName", selectedFile.name);
+        formData.append("time", selectedTime);
+
+        try{
+            const response = await axios.post(
+                "http://127.0.0.1:8000/api/uploadFile/",
+                formData,{
+                    headers: {"Content-Type": "multipart/form-data"},
+                    maxBodyLength: 10000000,
+                    maxContentLength: 10000000
+            },);
+            var parsedData = JSON.parse(response.data);
+            console.log(parsedData[0]);
+        } catch (error){
+            console.error(error.response.data);
+        }
+        setUploadButtonText("upload");
+    }
+
+    const handleTimeChange = (event) =>{
+        setSelectedTime(event.target.value);
     }
 
     if(loading === "Loading..."){
@@ -83,15 +120,40 @@ const sendCommand = async() => {
             <div className="divider"/>
             <div className="rightContainer">
                     <input type="text" placeholder="run command..." onChange={(e) => setCommand(e.target.value)}/>
-                    <button onClick={() => sendCommand()}>run!</button>
+                    <button onClick={() => sendCommand()}>{runButtonText}</button>
                     <div className="commandOutput">
-                        Command: {command}
-                        <br/>
                         Output: {output}
                     </div>
-                    <br/>
-                    <input type="file"/>
-                    <button>upload</button>
+
+
+                        <input type="file" onChange={(e) => setSelectedFile(e.target.files[0])}/>
+                        <br/><br/>
+                        Run frequency:<br/>
+                        <label>
+                            <input type="radio" name="selectedTime" value="transfer" checked={selectedTime === 'transfer'} onChange={handleTimeChange}/>
+                            transfer
+                        </label>
+                        <label>
+                            <input type="radio" name="selectedTime" value="run" checked={selectedTime === 'run'} onChange={handleTimeChange}/>
+                            run now
+                        </label>
+                        <label>
+                            <input type="radio" name="selectedTime" value="day" checked={selectedTime === 'day'} onChange={handleTimeChange}/>
+                            every day
+                        </label>
+
+                        <label>
+                            <input type="radio" name="selectedTime" value="hour" checked={selectedTime === 'hour'} onChange={handleTimeChange}/>
+                            every hour
+                        </label>
+
+                        <label>
+                            <input type="radio" name="selectedTime" value="startup" checked={selectedTime === 'startup'} onChange={handleTimeChange}/>
+                            at startup
+                        </label>
+                        <br/><br/>
+                        <button onClick={() => uploadFile()}>upload</button>
+
 
             </div>
 

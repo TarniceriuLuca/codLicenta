@@ -1,5 +1,16 @@
+pentru initializarea aplicatiei este necesara generarea unei chei private
+si copierea cheii publice pe dispozitivul remote. Acest lucru va necesita interactiune cu terminalul
+la adaugarea unui dispozitiv in aplicatie
+1. ssh-keygen -t rsa (leave all questions blank)
+2. ssh-copy-id username@address
+
 python
 django
 nodejs
 npm
 yarn
+arp-scan
+axios (npm)
+
+!!ps ax | grep rnote | awk '{print $1;}' | head -1
+to get pid of first process of specified name

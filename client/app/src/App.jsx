@@ -25,9 +25,12 @@ function App() {
         <>
 
             <div className="navbar">
+{/*             buton pentru selectarea pagini de monitorizare    */}
                 <button onClick={() => {localStorage.setItem('currentPage', 'monitoring'); setPage(localStorage.getItem('currentPage'))}}>Monitor</button>
+{/*             buton pentru selectarea pagini de adăugare dispozitiv    */}
                 <button onClick={() => {localStorage.setItem('currentPage', 'newDevice'); setPage(localStorage.getItem('currentPage'))}}>Add Device</button>
             </div>
+{/*         în funție de valoarea variabilei 'currentPage', se alege componenta care trebuie afișată    */}
             {localStorage.getItem('currentPage') === "newDevice" && <NewDevice/>}
             {localStorage.getItem('currentPage') === "monitoring" && <Monitoring/>}
             {localStorage.getItem('currentPage') === "deviceDetails" && <DeviceDetails/>}
