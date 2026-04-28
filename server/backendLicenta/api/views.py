@@ -107,16 +107,22 @@ def get_status_by_ip(request):
 
 @api_view(['POST'])
 def run_command(request):
+    # preluarea adresei IP si al textului comenzii primite prin request de tip POST
     clientIP = request.POST['ip']
     commandInput = request.POST['command']
+    # este selectat clientul din baza de date, folosind adresa IP pentru cheia primara
     client = Client.objects.get(pk=clientIP)
 
     responseData = []
 
+    # textul complet al comenzii care se ruleaza este construita in variabila "command"
+    # si este alcatuita din apelul ssh, numele utilizatorului, adresa IP a clientului
+    # si textul comenzii care trebuie rulate
     command = "ssh " + client.user + "@" + client.ip + " '" + commandInput + "'"
-    # os.system(command)
+    # comanda formata este rulata folosind subprocess, cu returnarea output-ului comenzii,
+    # care este memorat in variabila "result"
     result = str(subprocess.check_output(command, shell=True), "utf-8")
-    print(result)
+    # rezultatul este adaugat intr-un dictionar si returnat ca si raspuns din functie.
     responseData.append({"result":result})
 
     return Response(json.dumps(responseData))
