@@ -12,7 +12,16 @@ from .models import Client
 
 
 # Create your views here.
+def perform_shutdown(client):
+    port = 65432
+    data = "shutdown"
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.connect((client.ip, port))
+        sock.sendall(bytes(data, "utf-8"))
 
+        received = str(sock.recv(1024), "utf-8")
+        return received
 
 @api_view(['GET'])
 def get_status(request):
@@ -106,6 +115,36 @@ def get_status_by_ip(request):
     return Response(json.dumps(responseData))
 
 @api_view(['POST'])
+def delete_client(request):
+    clientIP = request.POST['ip']
+    client = Client.objects.get(pk=clientIP)
+    print("found client: ", client.name)
+    try:
+        received = perform_shutdown(client)
+    except:
+        received = "none"
+    command = "ssh " + client.user + "@" + client.ip + " 'rm -r ~/RemoteMonitor'"
+    subprocess.check_output(command, shell=True)
+    responseData = []
+    if Client.objects.get(pk=clientIP).delete():
+        responseData.append({"result":"OK"})
+    else:
+        responseData.append({"result": "delete_err"})
+    return Response(json.dumps(responseData))
+
+@api_view(['POST'])
+def shutdown_client(request):
+    clientIP = request.POST['ip']
+    client = Client.objects.get(pk=clientIP)
+    try:
+        received = perform_shutdown(client)
+    except:
+        received = "none"
+
+    responseData = [{"result": received}]
+    return Response(json.dumps(responseData))
+
+@api_view(['POST'])
 def run_command(request):
     clientIP = request.POST['ip']
     commandInput = request.POST['command']
@@ -114,50 +153,17 @@ def run_command(request):
     responseData = []
 
     command = "ssh " + client.user + "@" + client.ip + " '" + commandInput + "'"
-    # os.system(command)
-    result = str(subprocess.check_output(command, shell=True), "utf-8")
-    print(result)
-    responseData.append({"result":result})
 
-    return Response(json.dumps(responseData))
-
-
-@api_view(['POST'])
-def delete_client(request):
-    clientIP = request.POST['ip']
-    client = Client.objects.get(pk=clientIP)
-    shutdown_client(request)
-    command = "ssh " + client.user + "@" + client.ip + " 'rm -r ~/RemoteMonitor'"
-    subprocess.check_output(command, shell=True)
-    responseData = []
-    if Client.objects.get(pk=clientIP).delete():
-        responseData.append({"result":"OK"})
-    else:
-        responseData.append({"result": "delete_err"})
-
-
-    return Response(json.dumps(responseData))
-
-@api_view(['POST'])
-def shutdown_client(request):
-    clientIP = request.POST['ip']
-    client = Client.objects.get(pk=clientIP)
-    port = 65432
-    data = "shutdown"
-    responseData = []
     try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            sock.connect((client.ip, port))
-            sock.sendall(bytes(data, "utf-8"))
+        result = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
+        print(str(result, "utf-8"))
+    except subprocess.CalledProcessError as e:
+        result = ">" + e.output + "<"
+        print(result)
 
-            received = str(sock.recv(1024), "utf-8")
-            print(received)
-    except:
-        pass
-    responseData.append({"result": received})
+    responseData.append({"result":str(result, "utf-8")})
+
     return Response(json.dumps(responseData))
-
 
 
 @api_view(['POST'])
