@@ -26,8 +26,7 @@ export default function Monitoring() {
         try{
             const response = await fetch("http://127.0.0.1:8000/api/status/");
             const data = await response.json();
-            var parsedData = JSON.parse(data)
-            setStatus(parsedData);
+            setStatus(data);
             setLoading("");
         } catch(err){
             console.log(err)
@@ -65,6 +64,14 @@ export default function Monitoring() {
             return response.data
     }
 
+    const removeClient = async(ip) => {
+            const body = {"ip": ip};
+            const response = await axios.post("http://127.0.0.1:8000/api/removeClient/", body,
+                {headers:{'Content-Type':'multipart/form-data',}})
+            console.log(response)
+            return response.data
+    }
+
     const shutdownClient = async(ip) => {
             const body = {"ip": ip};
             console.log(body)
@@ -95,9 +102,14 @@ export default function Monitoring() {
                         <span> mem: {client.status[0]} </span>
                         <span> cpu: {client.status[1]} </span>
 
-                        {client.status[0] == "not available" && <a className="reconnectBtn" onClick={() => reconnect(client.ip, client.user)}>reconnect</a>}
-                        <button className="deleteBtn" onClick={() => deleteClient(client.ip)}>Delete</button>
-                        <button className="deleteBtn" onClick={() => shutdownClient(client.ip)}>Shutdown</button>
+                        {client.status[0] == "not available" &&
+                            <a className="reconnectBtn" onClick={() => reconnect(client.ip, client.user)}>reconnect</a>}
+
+                        {client.status[0] == "not available" &&
+                            <a className="forceDelBtn" onClick={() => removeClient(client.ip)}>Remove</a> ||
+                            <a className="deleteBtn" onClick={() => deleteClient(client.ip)}>Delete</a>
+                        }
+                        <a className="shutdownBtn" onClick={() => shutdownClient(client.ip)}>Shutdown</a>
                     </div>
                 ))}
             </div>

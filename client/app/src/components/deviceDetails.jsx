@@ -35,10 +35,9 @@ const DeviceDetails = () => {
         const response = await axios.post("http://127.0.0.1:8000/api/ipStatus/", body,
             {headers:{'Content-Type':'multipart/form-data',}})
 
-        var parsedData = JSON.parse(response.data)
-        setData(parsedData[0])
+        setData(response.data[0])
         try{
-        setStatus(parsedData[0].status)
+        setStatus(response.data[0].status)
         } catch(err){
             console.log(err)
         }
@@ -52,10 +51,8 @@ const DeviceDetails = () => {
             {headers:{'Content-Type':'multipart/form-data',}})
 
 
-
-        var parsedData = JSON.parse(response.data)
-        console.log(parsedData[0]);
-        setOutput(parsedData[0].result)
+        console.log(response.data[0]);
+        setOutput(response.data[0].result)
         setRunButtonText("run!");
     }
 
@@ -76,8 +73,7 @@ const DeviceDetails = () => {
                     maxBodyLength: 10000000,
                     maxContentLength: 10000000
             },);
-            var parsedData = JSON.parse(response.data);
-            console.log(parsedData[0]);
+            console.log(response.data[0]);
         } catch (error){
             console.error(error.response.data);
         }
