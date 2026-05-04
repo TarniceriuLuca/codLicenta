@@ -53,7 +53,7 @@ const NewDevice = () => {
         }
     };
 
-    if(status == "Loading..."){
+    if(status == "Loading..." || status == "Please authenticate in server console"){
         return(
         <>
         <h1> Add new device </h1>

@@ -12,7 +12,16 @@ from .models import Client
 
 
 # Create your views here.
+def perform_shutdown(client):
+    port = 65432
+    data = "shutdown"
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.connect((client.ip, port))
+        sock.sendall(bytes(data, "utf-8"))
 
+        received = str(sock.recv(1024), "utf-8")
+        return received
 
 @api_view(['GET'])
 def get_status(request):
@@ -106,33 +115,14 @@ def get_status_by_ip(request):
     return Response(json.dumps(responseData))
 
 @api_view(['POST'])
-def run_command(request):
-    # preluarea adresei IP si al textului comenzii primite prin request de tip POST
-    clientIP = request.POST['ip']
-    commandInput = request.POST['command']
-    # este selectat clientul din baza de date, folosind adresa IP pentru cheia primara
-    client = Client.objects.get(pk=clientIP)
-
-    responseData = []
-
-    # textul complet al comenzii care se ruleaza este construita in variabila "command"
-    # si este alcatuita din apelul ssh, numele utilizatorului, adresa IP a clientului
-    # si textul comenzii care trebuie rulate
-    command = "ssh " + client.user + "@" + client.ip + " '" + commandInput + "'"
-    # comanda formata este rulata folosind subprocess, cu returnarea output-ului comenzii,
-    # care este memorat in variabila "result"
-    result = str(subprocess.check_output(command, shell=True), "utf-8")
-    # rezultatul este adaugat intr-un dictionar si returnat ca si raspuns din functie.
-    responseData.append({"result":result})
-
-    return Response(json.dumps(responseData))
-
-
-@api_view(['POST'])
 def delete_client(request):
     clientIP = request.POST['ip']
     client = Client.objects.get(pk=clientIP)
-    shutdown_client(request)
+    print("found client: ", client.name)
+    try:
+        received = perform_shutdown(client)
+    except:
+        received = "none"
     command = "ssh " + client.user + "@" + client.ip + " 'rm -r ~/RemoteMonitor'"
     subprocess.check_output(command, shell=True)
     responseData = []
@@ -140,30 +130,40 @@ def delete_client(request):
         responseData.append({"result":"OK"})
     else:
         responseData.append({"result": "delete_err"})
-
-
     return Response(json.dumps(responseData))
 
 @api_view(['POST'])
 def shutdown_client(request):
     clientIP = request.POST['ip']
     client = Client.objects.get(pk=clientIP)
-    port = 65432
-    data = "shutdown"
-    responseData = []
     try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            sock.connect((client.ip, port))
-            sock.sendall(bytes(data, "utf-8"))
-
-            received = str(sock.recv(1024), "utf-8")
-            print(received)
+        received = perform_shutdown(client)
     except:
-        pass
-    responseData.append({"result": received})
+        received = "none"
+
+    responseData = [{"result": received}]
     return Response(json.dumps(responseData))
 
+@api_view(['POST'])
+def run_command(request):
+    clientIP = request.POST['ip']
+    commandInput = request.POST['command']
+    client = Client.objects.get(pk=clientIP)
+
+    responseData = []
+
+    command = "ssh " + client.user + "@" + client.ip + " '" + commandInput + "'"
+
+    try:
+        result = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
+        print(str(result, "utf-8"))
+    except subprocess.CalledProcessError as e:
+        result = ">" + e.output + "<"
+        print(result)
+
+    responseData.append({"result":str(result, "utf-8")})
+
+    return Response(json.dumps(responseData))
 
 
 @api_view(['POST'])
