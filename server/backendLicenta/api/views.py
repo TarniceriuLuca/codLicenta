@@ -38,7 +38,7 @@ def get_status(request):
 
                 received = str(sock.recv(1024), "utf-8")
         except:
-            received = '["not available", "not available"]'
+            received = '["n/a", "n/a"]'
         # print("Received:", json.loads(received))
         responseData.append({"name" : client.name, "ip": client.ip, "user": client.user, "status" : json.loads(received)})
 
@@ -109,7 +109,7 @@ def get_status_by_ip(request):
             received = str(sock.recv(1024), "utf-8")
             time.sleep(0.3)
     except:
-        received = '["not available", "not available"]'
+        received = '["n/a", "n/a"]'
     # print("Received:", json.loads(received))
     responseData.append({"name": client.name, "ip": client.ip, "user": client.user, "status": json.loads(received)})
     return Response(responseData)
@@ -180,27 +180,35 @@ def run_command(request):
 @api_view(['POST'])
 def upload_file(request):
     responseData = []
-    print("called file upload")
+    # sunt preluate: fișierul transmis, adresa IP a clientului, numele fișierului și
+    # opțiunea de rulare selectate în formularul din interfața web, transmise
+    # prin formularul de tip POST
     if request.method == "POST":
         script = request.FILES.get('script')
         clientIP = request.POST['ip']
         fileName = request.POST['fileName']
         time = request.POST['time']
+        # este selectat obiectul client din baza de date, dupa adresa IP a acestuia
         client = Client.objects.get(pk=clientIP)
-        print(clientIP)
         responseData.append({"result": "received"})
-
+        # fișierul primit este citit, iar conținutul este copiat într-un
+        # fișier temporar pentru a putea fi trimis către dispozitivul client
         file_content = script.read().decode("utf_8")
         with open("/tmp/remoteScript", 'w') as tmp:
             tmp.write(file_content)
         print(file_content, time)
 
+        # pentru toate opțiunile în care fișierul nu trebuie rulat imediat, se va transfera fișierul
+        # pe dispozitivul client folosind comanda pentru transfer securizat "scp",
+        # și se atribuie permisiunile necesare fișierului pentru a putea fi rulat.
         if time != "run":
             command = "scp /tmp/remoteScript " + client.user + "@" + client.ip + ":~/RemoteMonitor/" + fileName
             subprocess.check_output(command, shell=True)
             command = "ssh " + client.user + "@" + client.ip + " \"chmod +x ~/RemoteMonitor/\"" + fileName
             subprocess.check_output(command, shell=True)
-
+        # pentru fiecare optiune, este specificată comanda care trebuie rulată, respectiv string-ul "null"
+        # daca nu trebuie rulată nici o altă comandă, și string-ul care trebuie adaugat în sistemul crontab
+        # pentru rularea periodică a fișierului.
         if time == "transfer":
             command = "null"
             cronString = "null"
@@ -220,6 +228,10 @@ def upload_file(request):
             command = "null"
             cronString = "null"
 
+        # atunci când este necesară adăugarea unei reguli pentru rulare periodică,
+        # sunt copiate toate regulile anterioare din sistemul crontab,
+        # se crează un fișier temporar cu regulile precedente, la care se adaugă noua regulă,
+        # și se aplică fișierul creat in sistemul crontab, după care fisierul temporar este șters
         if cronString != "null":
             print(cronString)
             copy_current_crontab = "ssh " + client.user + "@" + client.ip + " \"crontab -l > /tmp/cronjob\""
@@ -230,6 +242,7 @@ def upload_file(request):
             subprocess.check_output(apply_new_crontab, shell=True)
             remove_temp_file = "ssh " + client.user + "@" + client.ip + " rm -rf /tmp/cronjob"
             subprocess.check_output(remove_temp_file, shell=True)
+        # dacă este necesară rularea unei comenzi, aceasta este este executată folosind subprocess
         if command != "null":
             subprocess.check_output(command, shell=True)
     return Response(responseData)

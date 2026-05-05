@@ -102,10 +102,10 @@ export default function Monitoring() {
                         <span> mem: {client.status[0]} </span>
                         <span> cpu: {client.status[1]} </span>
 
-                        {client.status[0] == "not available" &&
+                        {client.status[0] == "n/a" &&
                             <a className="reconnectBtn" onClick={() => reconnect(client.ip, client.user)}>reconnect</a>}
 
-                        {client.status[0] == "not available" &&
+                        {client.status[0] == "n/a" &&
                             <a className="forceDelBtn" onClick={() => removeClient(client.ip)}>Remove</a> ||
                             <a className="deleteBtn" onClick={() => deleteClient(client.ip)}>Delete</a>
                         }
