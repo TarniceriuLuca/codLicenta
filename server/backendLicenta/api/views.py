@@ -79,8 +79,13 @@ def add_device(request):
     )
     command1 = "ssh " + user + "@" + ip + " bash < ./backendLicenta/initialize.sh"
 
-    subprocess.Popen(command1, shell=True)
-    return Response("success")
+    subprocess.Popen(command1, shell=True, stdout=sp.PIPE)
+    streamdata = child.communicate()[0]
+    if child.returncode < 0:
+        response = "add_error"
+    else:
+        response = "success"
+    return Response(response)
 
 @api_view(['POST'])
 def reconnect(request):
@@ -89,8 +94,13 @@ def reconnect(request):
 
     command = "ssh " + user+"@"+ip + " \" nohup python3 ~/RemoteMonitor/TCP_receive.py\""
     subprocess.Popen(command, shell=True)
+    streamdata = child.communicate()[0]
+    if child.returncode < 0:
+        response = "reconect_error"
+    else:
+        response = "success"
 
-    return Response("OK")
+    return Response(response)
 
 @api_view(['POST'])
 def get_status_by_ip(request):
@@ -124,23 +134,22 @@ def delete_client(request):
         received = "none"
     command = "ssh " + client.user + "@" + client.ip + " 'rm -r ~/RemoteMonitor'"
     subprocess.check_output(command, shell=True)
-    responseData = []
-    if client.delete():
-        responseData.append({"result":"OK"})
+    if client.delete() and received != "none":
+        response = "success"
     else:
-        responseData.append({"result": "delete_err"})
-    return Response(responseData)
+        response = "delete_error"
+    return Response(response)
 
 @api_view(['POST'])
 def remove_client(request):
     clientIP = request.POST['ip']
     client = Client.objects.get(pk=clientIP)
-    responseData = []
+
     if client.delete():
-        responseData.append({"result":"OK"})
+        response = "success"
     else:
-        responseData.append({"result": "delete_err"})
-    return Response(responseData)
+        response = "remove_error"
+    return Response(response)
 
 
 @api_view(['POST'])
@@ -150,7 +159,7 @@ def shutdown_client(request):
     try:
         received = perform_shutdown(client)
     except:
-        received = "none"
+        received = "shutdown_error"
 
     responseData = [{"result": received}]
     return Response(responseData)

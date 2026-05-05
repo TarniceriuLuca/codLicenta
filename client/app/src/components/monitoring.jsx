@@ -61,7 +61,6 @@ export default function Monitoring() {
             const response = await axios.post("http://127.0.0.1:8000/api/deleteClient/", body,
                 {headers:{'Content-Type':'multipart/form-data',}})
             console.log(response)
-            return response.data
     }
 
     const removeClient = async(ip) => {
@@ -69,7 +68,6 @@ export default function Monitoring() {
             const response = await axios.post("http://127.0.0.1:8000/api/removeClient/", body,
                 {headers:{'Content-Type':'multipart/form-data',}})
             console.log(response)
-            return response.data
     }
 
     const shutdownClient = async(ip) => {
@@ -78,7 +76,6 @@ export default function Monitoring() {
             const response = await axios.post("http://127.0.0.1:8000/api/shutdownClient/", body,
                 {headers:{'Content-Type':'multipart/form-data',}})
             console.log(response)
-            return response.data
     }
 
      return (
