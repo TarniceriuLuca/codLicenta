@@ -9,6 +9,7 @@ urlpatterns = [
     path('ipStatus/', get_status_by_ip, name='get_status_by_ip'),
     path('runCommand/', run_command, name='run_command'),
     path('deleteClient/', delete_client, name='delete_client'),
+    path('removeClient/', remove_client, name='remove_client'),
     path('shutdownClient/', shutdown_client, name='shutdown_server'),
     path('uploadFile/', upload_file, name="upload_file")
 ]

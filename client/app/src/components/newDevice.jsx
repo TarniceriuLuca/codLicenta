@@ -3,7 +3,10 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 
 const NewDevice = () => {
-     const [status, setStatus] = useState("Please authenticate in server console");
+
+     const[devices, setDevices] = useState();
+     const[viewState, setViewState] = useState("Please authenticate in server console");
+
      const [deviceName, setDeviceName] = useState("");
      const [selectedUser, setSelectedUser] = useState("");
      const [selectedIP, setSelectedIP] = useState("");
@@ -17,7 +20,7 @@ const NewDevice = () => {
 
     const handleSelection = (ip) => {
         setSelectedIP(ip);
-        setStatus("setName")
+        setViewState("setName")
     }
 
 
@@ -28,7 +31,7 @@ const NewDevice = () => {
             {headers:{'Content-Type':'multipart/form-data',}})
 
         console.log(response)
-        setStatus(response.data)
+        setViewState(response.data)
         return response.data
     }
 
@@ -45,25 +48,25 @@ const NewDevice = () => {
             const response = await fetch("http://127.0.0.1:8000/api/listDevices/");
             const data = await response.json();
 
-            var parsedData = JSON.parse(data)
-            console.log(parsedData);
-            setStatus(parsedData);
+            console.log(data);
+            setDevices(data);
+            setViewState("deivces");
         } catch(err){
             console.log(err)
         }
     };
 
-    if(status == "Loading..." || status == "Please authenticate in server console"){
+    if(viewState == "Loading..." || viewState == "Please authenticate in server console"){
         return(
         <>
         <h1> Add new device </h1>
         <div>
-            {status}
+            {viewState}
         </div>
         </>
         )
     }
-    if(status == "setName"){
+    if(viewState == "setName"){
         return(
             <>
             <h1> Set device name </h1>
@@ -76,7 +79,7 @@ const NewDevice = () => {
             </>
         )
     }
-    if(status == "OK"){
+    if(viewState == "success"){
         return(
             <>
             <h1> Data sent! </h1>
@@ -88,12 +91,12 @@ const NewDevice = () => {
         <h1> Add new device </h1>
         <div className="parentContainer">
             <div className="childIP">
-                {status.map((host) => (
+                {devices.map((host) => (
                     <div key={host.ip}><a onClick={() => handleSelection(host.ip)}>{host.ip}</a>:</div>
                 ))}
             </div>
             <div className="childVendor">
-                {status.map((host) => (
+                {devices.map((host) => (
                     <div key={host.ip}>{host.connected ? <div style={{color:'#fcba03' }}> {host.vendor + " <connected> "}</div>: host.vendor}</div>
                 ))}
             </div>

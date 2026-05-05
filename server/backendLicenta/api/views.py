@@ -42,7 +42,7 @@ def get_status(request):
         # print("Received:", json.loads(received))
         responseData.append({"name" : client.name, "ip": client.ip, "user": client.user, "status" : json.loads(received)})
 
-    return Response(json.dumps(responseData))
+    return Response(responseData)
 
 @api_view(['GET'])
 def list_devices(request):
@@ -62,7 +62,7 @@ def list_devices(request):
         else:
             responseData.append({"ip": formatedData[0], "vendor": formatedData[1], "connected": 0})
 
-    return Response(json.dumps(responseData))
+    return Response(responseData)
 
 @api_view(['POST'])
 def add_device(request):
@@ -79,8 +79,8 @@ def add_device(request):
     )
     command1 = "ssh " + user + "@" + ip + " bash < ./backendLicenta/initialize.sh"
 
-    os.system(command1)
-    return Response("OK")
+    subprocess.Popen(command1, shell=True)
+    return Response("success")
 
 @api_view(['POST'])
 def reconnect(request):
@@ -112,13 +112,12 @@ def get_status_by_ip(request):
         received = '["not available", "not available"]'
     # print("Received:", json.loads(received))
     responseData.append({"name": client.name, "ip": client.ip, "user": client.user, "status": json.loads(received)})
-    return Response(json.dumps(responseData))
+    return Response(responseData)
 
 @api_view(['POST'])
 def delete_client(request):
     clientIP = request.POST['ip']
     client = Client.objects.get(pk=clientIP)
-    print("found client: ", client.name)
     try:
         received = perform_shutdown(client)
     except:
@@ -126,11 +125,23 @@ def delete_client(request):
     command = "ssh " + client.user + "@" + client.ip + " 'rm -r ~/RemoteMonitor'"
     subprocess.check_output(command, shell=True)
     responseData = []
-    if Client.objects.get(pk=clientIP).delete():
+    if client.delete():
         responseData.append({"result":"OK"})
     else:
         responseData.append({"result": "delete_err"})
-    return Response(json.dumps(responseData))
+    return Response(responseData)
+
+@api_view(['POST'])
+def remove_client(request):
+    clientIP = request.POST['ip']
+    client = Client.objects.get(pk=clientIP)
+    responseData = []
+    if client.delete():
+        responseData.append({"result":"OK"})
+    else:
+        responseData.append({"result": "delete_err"})
+    return Response(responseData)
+
 
 @api_view(['POST'])
 def shutdown_client(request):
@@ -142,7 +153,7 @@ def shutdown_client(request):
         received = "none"
 
     responseData = [{"result": received}]
-    return Response(json.dumps(responseData))
+    return Response(responseData)
 
 @api_view(['POST'])
 def run_command(request):
@@ -163,7 +174,7 @@ def run_command(request):
 
     responseData.append({"result":str(result, "utf-8")})
 
-    return Response(json.dumps(responseData))
+    return Response(responseData)
 
 
 @api_view(['POST'])
@@ -221,4 +232,4 @@ def upload_file(request):
             subprocess.check_output(remove_temp_file, shell=True)
         if command != "null":
             subprocess.check_output(command, shell=True)
-    return Response(json.dumps(responseData))
+    return Response(responseData)
