@@ -1,5 +1,6 @@
 import json, time, os
 import subprocess
+from multiprocessing.process import active_children
 
 from django.core.handlers.exception import response_for_exception
 from django.shortcuts import render
@@ -11,7 +12,7 @@ import socket, sys
 from .models import Client
 
 
-# Create your views here.
+
 def perform_shutdown(client):
     port = 65432
     data = "shutdown"
@@ -52,6 +53,7 @@ def list_devices(request):
     activeHosts = activeHosts.split("\n")
     del activeHosts[-1] #sterge ultimul element null, creat din cauza ultimului caracter newline '\n'
     activeHosts.sort()
+    activeHosts.insert(0, '127.0.0.0, Localhost')
     activeHosts = list(dict.fromkeys(activeHosts)) #sterge intrarile duplicate
     # print(activeHosts)
     for hosts in activeHosts:

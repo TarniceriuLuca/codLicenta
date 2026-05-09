@@ -103,13 +103,15 @@ export default function Monitoring() {
                         <span> cpu: {client.status[1]} </span>
 
                         {client.status[0] == "not available" &&
-                            <a className="reconnectBtn" onClick={() => reconnect(client.ip, client.user)}>reconnect</a>}
+                            <a className="reconnectBtn" onClick={() => reconnect(client.ip, client.user)}>reconnect</a> ||
+                            <a className="shutdownBtn" onClick={() => shutdownClient(client.ip)}>Shutdown</a>
+                            }
 
                         {client.status[0] == "not available" &&
                             <a className="forceDelBtn" onClick={() => removeClient(client.ip)}>Remove</a> ||
                             <a className="deleteBtn" onClick={() => deleteClient(client.ip)}>Delete</a>
                         }
-                        <a className="shutdownBtn" onClick={() => shutdownClient(client.ip)}>Shutdown</a>
+
                     </div>
                 ))}
             </div>
