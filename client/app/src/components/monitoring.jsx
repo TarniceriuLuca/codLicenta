@@ -61,7 +61,6 @@ export default function Monitoring() {
             const response = await axios.post("http://127.0.0.1:8000/api/deleteClient/", body,
                 {headers:{'Content-Type':'multipart/form-data',}})
             console.log(response)
-            return response.data
     }
 
     const removeClient = async(ip) => {
@@ -69,7 +68,6 @@ export default function Monitoring() {
             const response = await axios.post("http://127.0.0.1:8000/api/removeClient/", body,
                 {headers:{'Content-Type':'multipart/form-data',}})
             console.log(response)
-            return response.data
     }
 
     const shutdownClient = async(ip) => {
@@ -78,7 +76,6 @@ export default function Monitoring() {
             const response = await axios.post("http://127.0.0.1:8000/api/shutdownClient/", body,
                 {headers:{'Content-Type':'multipart/form-data',}})
             console.log(response)
-            return response.data
     }
 
      return (
@@ -102,12 +99,12 @@ export default function Monitoring() {
                         <span> mem: {client.status[0]} </span>
                         <span> cpu: {client.status[1]} </span>
 
-                        {client.status[0] == "not available" &&
+                        {client.status[0] == "n/a" &&
                             <a className="reconnectBtn" onClick={() => reconnect(client.ip, client.user)}>reconnect</a> ||
                             <a className="shutdownBtn" onClick={() => shutdownClient(client.ip)}>Shutdown</a>
                             }
 
-                        {client.status[0] == "not available" &&
+                        {client.status[0] == "n/a" &&
                             <a className="forceDelBtn" onClick={() => removeClient(client.ip)}>Remove</a> ||
                             <a className="deleteBtn" onClick={() => deleteClient(client.ip)}>Delete</a>
                         }
